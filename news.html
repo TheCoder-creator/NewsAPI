@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horizen News</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  :root {
+    --bg: #080a0f;
+    --card: #0f1219;
+    --card2: #141820;
+    --accent: #00eb84;
+    --accent-dim: rgba(0,235,132,0.1);
+    --border: #1e2433;
+    --text: #e4e8f1;
+    --muted: #6b7280;
+    --red: #ef4444;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* Block wall */
+  #hz-block-wall {
+    position: fixed; inset: 0; background: var(--bg); z-index: 999999;
+    display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  }
+  .wall-spinner {
+    border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid var(--accent);
+    border-radius: 50%; width: 32px; height: 32px; animation: spin 1s linear infinite;
+  }
+  .wall-text { font-size: 13px; color: var(--muted); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Header */
+  header {
+    background: rgba(8,10,15,0.95); backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border); padding: 0 24px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 58px; position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-size: 22px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
+  .logo span { color: var(--text); font-weight: 300; }
+  .header-right { display: flex; align-items: center; gap: 10px; }
+  .search-bar {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--card2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 7px 16px; transition: border-color 0.2s;
+  }
+  .search-bar:focus-within { border-color: var(--accent); }
+  .search-bar input {
+    background: none; border: none; outline: none; color: var(--text);
+    font-family: 'Inter', sans-serif; font-size: 13px; width: 200px;
+  }
+  .search-bar i { color: var(--muted); font-size: 12px; }
+  .refresh-btn {
+    background: var(--accent-dim); border: 1px solid rgba(0,235,132,0.2);
+    color: var(--accent); padding: 7px 14px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+  }
+  .refresh-btn:hover { background: rgba(0,235,132,0.2); }
+
+  /* Category tabs */
+  .tabs-wrap { border-bottom: 1px solid var(--border); background: var(--card); overflow-x: auto; }
+  .tabs { display: flex; gap: 0; padding: 0 20px; white-space: nowrap; }
+  .tab {
+    padding: 14px 18px; font-size: 13px; font-weight: 500; color: var(--muted);
+    cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+  /* Layout */
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
+
+  /* Loader spinner in content */
+  .content-loader {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; padding: 60px; color: var(--muted); font-size: 14px;
+  }
+
+  /* Hero card (first article) */
+  .hero-card {
+    border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
+    background: var(--card); margin-bottom: 24px; cursor: pointer;
+    transition: border-color 0.2s, transform 0.2s; display: flex; min-height: 280px;
+  }
+  .hero-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .hero-img {
+    width: 45%; flex-shrink: 0; overflow: hidden; background: var(--card2);
+  }
+  .hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero-img .no-img {
+    width: 100%; height: 100%; display: flex; align-items: center;
+    justify-content: center; color: var(--muted); font-size: 40px;
+  }
+  .hero-body { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
+  .hero-source { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+  .hero-title { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 12px; color: var(--text); }
+  .hero-desc { font-size: 14px; color: var(--muted); line-height: 1.6; flex: 1; }
+  .hero-meta { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 12px; color: var(--muted); }
+  .hero-meta i { font-size: 10px; }
+
+  /* News grid */
+  .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+
+  .news-card {
+    border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
+    background: var(--card); cursor: pointer; transition: border-color 0.2s, transform 0.2s;
+    display: flex; flex-direction: column;
+  }
+  .news-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .news-card-img { height: 170px; overflow: hidden; background: var(--card2); flex-shrink: 0; }
+  .news-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.3s; }
+  .news-card:hover .news-card-img img { transform: scale(1.04); }
+  .news-card-img .no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 32px; }
+  .news-card-body { padding: 16px; display: flex; flex-direction: column; flex: 1; }
+  .news-source { font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+  .news-title { font-size: 14px; font-weight: 600; line-height: 1.45; color: var(--text); flex: 1; }
+  .news-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 11px; color: var(--muted); }
+  .read-btn {
+    background: var(--accent-dim); color: var(--accent); border: none;
+    padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+
+  /* Error banner */
+  .error-banner {
+    background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+    border-radius: 12px; padding: 16px 20px; color: var(--red);
+    font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+  }
+
+  /* Empty state */
+  .empty { text-align: center; padding: 60px; color: var(--muted); }
+  .empty i { font-size: 40px; margin-bottom: 12px; display: block; }
+
+  /* Fingerprint display */
+  #hz-addr-display {
+    position: fixed; bottom: 14px; left: 14px; background: rgba(8,10,15,0.9);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 13px;
+    font-family: monospace; font-size: 11px; color: var(--muted); z-index: 9999;
+    cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 7px;
+  }
+  #hz-addr-display:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 640px) {
+    .hero-card { flex-direction: column; }
+    .hero-img { width: 100%; height: 200px; }
+    .search-bar input { width: 130px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="hz-block-wall">
+  <div class="wall-spinner"></div>
+  <div class="wall-text">Connecting...</div>
+</div>
+
+<div id="hz-addr-display" onclick="hzCopyAddress()" title="Click to copy">
+  <i class="fas fa-fingerprint"></i>
+  <span id="hz-addr-text">Loading...</span>
+</div>
+
+<header>
+  <div class="logo">Horizen<span>News</span></div>
+  <div class="header-right">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input id="searchInput" placeholder="Search news..." onkeydown="if(event.key==='Enter') doSearch()">
+    </div>
+    <button class="refresh-btn" onclick="loadNews()"><i class="fas fa-rotate-right"></i> Refresh</button>
+  </div>
+</header>
+
+<div class="tabs-wrap">
+  <div class="tabs" id="tabs">
+    <div class="tab active" onclick="switchTab('general', this)">🌐 Top Stories</div>
+    <div class="tab" onclick="switchTab('technology', this)">💻 Tech</div>
+    <div class="tab" onclick="switchTab('business', this)">📈 Business</div>
+    <div class="tab" onclick="switchTab('sports', this)">⚽ Sports</div>
+    <div class="tab" onclick="switchTab('entertainment', this)">🎬 Entertainment</div>
+    <div class="tab" onclick="switchTab('science', this)">🔬 Science</div>
+    <div class="tab" onclick="switchTab('health', this)">❤️ Health</div>
+  </div>
+</div>
+
+<div class="container" id="mainContent">
+  <div class="content-loader">
+    <div class="wall-spinner"></div>
+    Loading news...
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://xlisbmtenekjmundxbcn.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_Cvs-AiKPTHrC_tfGfwlpSQ_4Hir5Cva';
+
+let newsApiKey = '';
+let currentCategory = 'general';
+let currentQuery = '';
+let hzMyAddress = '';
+let hzPollInterval = null;
+let sb = null;
+
+// =====================
+// FINGERPRINT (identical to Horizon OS)
+// =====================
+async function generateFingerprint() {
+  let raw = '';
+  try {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.textBaseline = 'top'; ctx.font = '14px Arial';
+    ctx.fillText('HorizonFP_fingerprint_test', 2, 2);
+    ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2, false); ctx.fill();
+    raw += canvas.toDataURL();
+  } catch (e) {}
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (gl) {
+      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbg) { raw += gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL); raw += gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); }
+    }
+  } catch (e) {}
+  try {
+    const a = new (window.AudioContext || window.webkitAudioContext)();
+    raw += a.sampleRate + a.destination.maxChannelCount + a.state; a.close();
+  } catch (e) {}
+  try {
+    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      let dc = { audioinput: 0, audiooutput: 0, videoinput: 0 };
+      devices.forEach(d => { if (dc[d.kind] !== undefined) dc[d.kind]++; });
+      raw += JSON.stringify(dc);
+    }
+  } catch (e) {}
+  raw += navigator.hardwareConcurrency || 'na';
+  raw += screen.width + 'x' + screen.height;
+  raw += screen.colorDepth;
+  raw += (navigator.deviceMemory || 'na');
+  raw += (navigator.platform || 'na');
+  raw += new Date().getTimezoneOffset();
+  raw += navigator.language;
+  raw += Intl.DateTimeFormat().resolvedOptions().timeZone;
+  raw += (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  try {
+    if (navigator.userAgentData) {
+      const hints = await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','model','bitness','fullVersionList']);
+      raw += JSON.stringify(hints);
+    } else { raw += navigator.userAgent; }
+  } catch (e) { raw += navigator.userAgent; }
+  let h1 = 0x811c9dc5;
+  for (let i = 0; i < raw.length; i++) { h1 ^= raw.charCodeAt(i); h1 = Math.imul(h1, 0x01000193); }
+  let h2 = 0x811c9dc5;
+  const rev = raw.split('').reverse().join('');
+  for (let i = 0; i < rev.length; i++) { h2 ^= rev.charCodeAt(i); h2 = Math.imul(h2, 0x01000193); }
+  return 'hz-pc-' + ((h1 >>> 0).toString(16) + (h2 >>> 0).toString(16)).toUpperCase().substring(0, 16);
+}
+
+async function hzCheckIfBlocked(id) {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/users?computer_id=eq.${encodeURIComponent(id)}&select=is_blocked`, { headers: { 'apikey': SUPABASE_KEY } });
+    const data = await res.json();
+    if (data.length > 0 && data[0].is_blocked === true) { window.location.replace('https://blocked.horizensearch.com'); return true; }
+  } catch (e) {}
+  return false;
+}
+
+function hzCopyAddress() {
+  navigator.clipboard.writeText(hzMyAddress).then(() => {
+    const el = document.getElementById('hz-addr-text');
+    el.innerText = 'Copied!';
+    setTimeout(() => { el.innerText = hzMyAddress; }, 1500);
+  });
+}
+
+// =====================
+// BOOT
+// =====================
+(async function boot() {
+  // Fingerprint + block check
+  let computerId = localStorage.getItem('horizen_computer_id');
+  if (!computerId) { computerId = await generateFingerprint(); localStorage.setItem('horizen_computer_id', computerId); }
+  hzMyAddress = computerId;
+  document.getElementById('hz-addr-text').innerText = computerId;
+
+  // Register device
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({ computer_id: computerId, nickname: 'Unknown', is_blocked: false })
+    });
+  } catch (e) {}
+
+  const blocked = await hzCheckIfBlocked(computerId);
+  if (blocked) return;
+
+  // Remove block wall
+  document.getElementById('hz-block-wall').style.display = 'none';
+
+  // Poll every 2 seconds
+  hzPollInterval = setInterval(() => hzCheckIfBlocked(computerId), 2000);
+
+  // Init Supabase and fetch API key
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  try {
+    const { data } = await sb.from('api_keys').select('key_name, key_value, is_active');
+    if (data) {
+      data.forEach(row => {
+        if (row.is_active !== false && row.key_name.toLowerCase() === 'newsapi') {
+          newsApiKey = row.key_value;
+        }
+      });
+    }
+  } catch (e) {}
+
+  if (!newsApiKey) {
+    document.getElementById('mainContent').innerHTML = '<div class="error-banner"><i class="fas fa-exclamation-triangle"></i> No NewsAPI key found in Supabase. Add a row with key_name="newsapi" to the api_keys table.</div>';
+    return;
+  }
+
+  loadNews();
+})();
+
+// =====================
+// TABS
+// =====================
+function switchTab(category, el) {
+  currentCategory = category;
+  currentQuery = '';
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  loadNews();
+}
+
+function doSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  if (!q) return;
+  currentQuery = q;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  loadNews();
+}
+
+// =====================
+// FETCH NEWS
+// =====================
+async function loadNews() {
+  document.getElementById('mainContent').innerHTML = '<div class="content-loader"><div class="wall-spinner"></div> Loading news...</div>';
+
+  try {
+    let url;
+    if (currentQuery) {
+      url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(currentQuery)}&sortBy=publishedAt&pageSize=30&apiKey=${newsApiKey}`;
+    } else {
+      url = `https://newsapi.org/v2/top-headlines?category=${currentCategory}&pageSize=30&language=en&apiKey=${newsApiKey}`;
+    }
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.status !== 'ok') {
+      throw new Error(data.message || 'NewsAPI error');
+    }
+
+    const articles = (data.articles || []).filter(a => a.title && a.title !== '[Removed]');
+    renderNews(articles);
+
+  } catch (err) {
+    document.getElementById('mainContent').innerHTML = `<div class="error-banner"><i class="fas fa-exclamation-triangle"></i> ${err.message}</div>`;
+  }
+}
+
+// =====================
+// RENDER
+// =====================
+function renderNews(articles) {
+  if (!articles.length) {
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><i class="fas fa-newspaper"></i>No articles found.</div>';
+    return;
+  }
+
+  const hero = articles[0];
+  const rest = articles.slice(1);
+
+  let html = '';
+
+  // Hero card
+  html += `
+  <div class="hero-card" onclick="openArticle('${escHtml(hero.url)}')">
+    <div class="hero-img">
+      ${hero.urlToImage
+        ? `<img src="${escHtml(hero.urlToImage)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">`
+        : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
+    </div>
+    <div class="hero-body">
+      <div class="hero-source">${escHtml(hero.source?.name || 'Unknown')}</div>
+      <div class="hero-title">${escHtml(hero.title)}</div>
+      <div class="hero-desc">${escHtml(hero.description || '')}</div>
+      <div class="hero-meta">
+        <span><i class="fas fa-clock"></i> ${timeAgo(hero.publishedAt)}</span>
+        <span><i class="fas fa-external-link-alt"></i> Read full story</span>
+      </div>
+    </div>
+  </div>`;
+
+  // Grid
+  html += '<div class="news-grid">';
+  rest.forEach(a => {
+    html += `
+    <div class="news-card" onclick="openArticle('${escHtml(a.url)}')">
+      <div class="news-card-img">
+        ${a.urlToImage
+          ? `<img src="${escHtml(a.urlToImage)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">`
+          : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
+      </div>
+      <div class="news-card-body">
+        <div class="news-source">${escHtml(a.source?.name || 'Unknown')}</div>
+        <div class="news-title">${escHtml(a.title)}</div>
+        <div class="news-meta">
+          <span><i class="fas fa-clock"></i> ${timeAgo(a.publishedAt)}</span>
+          <button class="read-btn" onclick="event.stopPropagation();openArticle('${escHtml(a.url)}')">Read →</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  html += '</div>';
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function openArticle(url) {
+  window.open(url, '_blank');
+}
+
+// =====================
+// HELPERS
+// =====================
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
