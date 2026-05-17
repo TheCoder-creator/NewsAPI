@@ -22,7 +22,6 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* Block wall */
   #hz-block-wall {
     position: fixed; inset: 0; background: var(--bg); z-index: 999999;
     display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px;
@@ -34,7 +33,6 @@
   .wall-text { font-size: 13px; color: var(--muted); }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* Header */
   header {
     background: rgba(8,10,15,0.95); backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border); padding: 0 24px;
@@ -59,13 +57,12 @@
     background: var(--accent-dim); border: 1px solid rgba(0,235,132,0.2);
     color: var(--accent); padding: 7px 14px; border-radius: 999px;
     font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', sans-serif; white-space: nowrap;
   }
   .refresh-btn:hover { background: rgba(0,235,132,0.2); }
 
-  /* Category tabs */
   .tabs-wrap { border-bottom: 1px solid var(--border); background: var(--card); overflow-x: auto; }
-  .tabs { display: flex; gap: 0; padding: 0 20px; white-space: nowrap; }
+  .tabs { display: flex; padding: 0 20px; white-space: nowrap; }
   .tab {
     padding: 14px 18px; font-size: 13px; font-weight: 500; color: var(--muted);
     cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.2s;
@@ -73,40 +70,29 @@
   .tab:hover { color: var(--text); }
   .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
 
-  /* Layout */
   .container { max-width: 1200px; margin: 0 auto; padding: 24px 20px; }
 
-  /* Loader spinner in content */
   .content-loader {
     display: flex; align-items: center; justify-content: center;
     gap: 12px; padding: 60px; color: var(--muted); font-size: 14px;
   }
 
-  /* Hero card (first article) */
   .hero-card {
     border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
     background: var(--card); margin-bottom: 24px; cursor: pointer;
     transition: border-color 0.2s, transform 0.2s; display: flex; min-height: 280px;
   }
   .hero-card:hover { border-color: var(--accent); transform: translateY(-2px); }
-  .hero-img {
-    width: 45%; flex-shrink: 0; overflow: hidden; background: var(--card2);
-  }
+  .hero-img { width: 45%; flex-shrink: 0; overflow: hidden; background: var(--card2); }
   .hero-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .hero-img .no-img {
-    width: 100%; height: 100%; display: flex; align-items: center;
-    justify-content: center; color: var(--muted); font-size: 40px;
-  }
+  .hero-img .no-img { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 40px; }
   .hero-body { padding: 28px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
   .hero-source { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
   .hero-title { font-size: 22px; font-weight: 700; line-height: 1.35; margin-bottom: 12px; color: var(--text); }
   .hero-desc { font-size: 14px; color: var(--muted); line-height: 1.6; flex: 1; }
   .hero-meta { display: flex; align-items: center; gap: 12px; margin-top: 16px; font-size: 12px; color: var(--muted); }
-  .hero-meta i { font-size: 10px; }
 
-  /* News grid */
   .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
-
   .news-card {
     border-radius: 14px; overflow: hidden; border: 1px solid var(--border);
     background: var(--card); cursor: pointer; transition: border-color 0.2s, transform 0.2s;
@@ -127,18 +113,14 @@
     cursor: pointer; font-family: 'Inter', sans-serif;
   }
 
-  /* Error banner */
   .error-banner {
     background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
     border-radius: 12px; padding: 16px 20px; color: var(--red);
     font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
   }
-
-  /* Empty state */
   .empty { text-align: center; padding: 60px; color: var(--muted); }
   .empty i { font-size: 40px; margin-bottom: 12px; display: block; }
 
-  /* Fingerprint display */
   #hz-addr-display {
     position: fixed; bottom: 14px; left: 14px; background: rgba(8,10,15,0.9);
     border: 1px solid var(--border); border-radius: 8px; padding: 7px 13px;
@@ -150,7 +132,7 @@
   @media (max-width: 640px) {
     .hero-card { flex-direction: column; }
     .hero-img { width: 100%; height: 200px; }
-    .search-bar input { width: 130px; }
+    .search-bar input { width: 120px; }
   }
 </style>
 </head>
@@ -178,14 +160,16 @@
 </header>
 
 <div class="tabs-wrap">
-  <div class="tabs" id="tabs">
-    <div class="tab active" onclick="switchTab('general', this)">🌐 Top Stories</div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('breaking-news', this)">🌐 Top Stories</div>
     <div class="tab" onclick="switchTab('technology', this)">💻 Tech</div>
     <div class="tab" onclick="switchTab('business', this)">📈 Business</div>
     <div class="tab" onclick="switchTab('sports', this)">⚽ Sports</div>
     <div class="tab" onclick="switchTab('entertainment', this)">🎬 Entertainment</div>
     <div class="tab" onclick="switchTab('science', this)">🔬 Science</div>
     <div class="tab" onclick="switchTab('health', this)">❤️ Health</div>
+    <div class="tab" onclick="switchTab('nation', this)">🇺🇸 Nation</div>
+    <div class="tab" onclick="switchTab('world', this)">🌍 World</div>
   </div>
 </div>
 
@@ -201,45 +185,17 @@ const SUPABASE_URL = 'https://xlisbmtenekjmundxbcn.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Cvs-AiKPTHrC_tfGfwlpSQ_4Hir5Cva';
 
 let newsApiKey = '';
-let currentCategory = 'general';
+let currentTopic = 'breaking-news';
 let currentQuery = '';
 let hzMyAddress = '';
 let hzPollInterval = null;
-let sb = null;
 
-// =====================
-// FINGERPRINT (identical to Horizon OS)
-// =====================
 async function generateFingerprint() {
   let raw = '';
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    ctx.textBaseline = 'top'; ctx.font = '14px Arial';
-    ctx.fillText('HorizonFP_fingerprint_test', 2, 2);
-    ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2, false); ctx.fill();
-    raw += canvas.toDataURL();
-  } catch (e) {}
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    if (gl) {
-      const dbg = gl.getExtension('WEBGL_debug_renderer_info');
-      if (dbg) { raw += gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL); raw += gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); }
-    }
-  } catch (e) {}
-  try {
-    const a = new (window.AudioContext || window.webkitAudioContext)();
-    raw += a.sampleRate + a.destination.maxChannelCount + a.state; a.close();
-  } catch (e) {}
-  try {
-    if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      let dc = { audioinput: 0, audiooutput: 0, videoinput: 0 };
-      devices.forEach(d => { if (dc[d.kind] !== undefined) dc[d.kind]++; });
-      raw += JSON.stringify(dc);
-    }
-  } catch (e) {}
+  try { const canvas = document.createElement('canvas'); const ctx = canvas.getContext('2d'); ctx.textBaseline = 'top'; ctx.font = '14px Arial'; ctx.fillText('HorizonFP_fingerprint_test', 2, 2); ctx.beginPath(); ctx.arc(50, 50, 50, 0, Math.PI * 2, false); ctx.fill(); raw += canvas.toDataURL(); } catch (e) {}
+  try { const canvas = document.createElement('canvas'); const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl'); if (gl) { const dbg = gl.getExtension('WEBGL_debug_renderer_info'); if (dbg) { raw += gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL); raw += gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL); } } } catch (e) {}
+  try { const a = new (window.AudioContext || window.webkitAudioContext)(); raw += a.sampleRate + a.destination.maxChannelCount + a.state; a.close(); } catch (e) {}
+  try { if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) { const devices = await navigator.mediaDevices.enumerateDevices(); let dc = { audioinput: 0, audiooutput: 0, videoinput: 0 }; devices.forEach(d => { if (dc[d.kind] !== undefined) dc[d.kind]++; }); raw += JSON.stringify(dc); } } catch (e) {}
   raw += navigator.hardwareConcurrency || 'na';
   raw += screen.width + 'x' + screen.height;
   raw += screen.colorDepth;
@@ -249,12 +205,7 @@ async function generateFingerprint() {
   raw += navigator.language;
   raw += Intl.DateTimeFormat().resolvedOptions().timeZone;
   raw += (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  try {
-    if (navigator.userAgentData) {
-      const hints = await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','model','bitness','fullVersionList']);
-      raw += JSON.stringify(hints);
-    } else { raw += navigator.userAgent; }
-  } catch (e) { raw += navigator.userAgent; }
+  try { if (navigator.userAgentData) { const hints = await navigator.userAgentData.getHighEntropyValues(['platform','platformVersion','architecture','model','bitness','fullVersionList']); raw += JSON.stringify(hints); } else { raw += navigator.userAgent; } } catch (e) { raw += navigator.userAgent; }
   let h1 = 0x811c9dc5;
   for (let i = 0; i < raw.length; i++) { h1 ^= raw.charCodeAt(i); h1 = Math.imul(h1, 0x01000193); }
   let h2 = 0x811c9dc5;
@@ -280,17 +231,12 @@ function hzCopyAddress() {
   });
 }
 
-// =====================
-// BOOT
-// =====================
 (async function boot() {
-  // Fingerprint + block check
   let computerId = localStorage.getItem('horizen_computer_id');
   if (!computerId) { computerId = await generateFingerprint(); localStorage.setItem('horizen_computer_id', computerId); }
   hzMyAddress = computerId;
   document.getElementById('hz-addr-text').innerText = computerId;
 
-  // Register device
   try {
     await fetch(`${SUPABASE_URL}/rest/v1/users`, {
       method: 'POST',
@@ -302,38 +248,29 @@ function hzCopyAddress() {
   const blocked = await hzCheckIfBlocked(computerId);
   if (blocked) return;
 
-  // Remove block wall
   document.getElementById('hz-block-wall').style.display = 'none';
-
-  // Poll every 2 seconds
   hzPollInterval = setInterval(() => hzCheckIfBlocked(computerId), 2000);
 
-  // Init Supabase and fetch API key
-  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   try {
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     const { data } = await sb.from('api_keys').select('key_name, key_value, is_active');
     if (data) {
       data.forEach(row => {
-        if (row.is_active !== false && row.key_name.toLowerCase() === 'newsapi') {
-          newsApiKey = row.key_value;
-        }
+        if (row.is_active !== false && row.key_name.toLowerCase() === 'newsapi') newsApiKey = row.key_value;
       });
     }
   } catch (e) {}
 
   if (!newsApiKey) {
-    document.getElementById('mainContent').innerHTML = '<div class="error-banner"><i class="fas fa-exclamation-triangle"></i> No NewsAPI key found in Supabase. Add a row with key_name="newsapi" to the api_keys table.</div>';
+    document.getElementById('mainContent').innerHTML = '<div class="error-banner"><i class="fas fa-exclamation-triangle"></i> No API key found. Add key_name="newsapi" to your Supabase api_keys table.</div>';
     return;
   }
 
   loadNews();
 })();
 
-// =====================
-// TABS
-// =====================
-function switchTab(category, el) {
-  currentCategory = category;
+function switchTab(topic, el) {
+  currentTopic = topic;
   currentQuery = '';
   document.getElementById('searchInput').value = '';
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -349,56 +286,40 @@ function doSearch() {
   loadNews();
 }
 
-// =====================
-// FETCH NEWS
-// =====================
 async function loadNews() {
   document.getElementById('mainContent').innerHTML = '<div class="content-loader"><div class="wall-spinner"></div> Loading news...</div>';
-
   try {
-    let url;
+    let apiUrl;
     if (currentQuery) {
-      url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(currentQuery)}&sortBy=publishedAt&pageSize=30&apiKey=${newsApiKey}`;
+      apiUrl = `https://gnews.io/api/v4/search?q=${encodeURIComponent(currentQuery)}&lang=en&max=10&apikey=${newsApiKey}`;
     } else {
-      url = `https://newsapi.org/v2/top-headlines?category=${currentCategory}&pageSize=30&language=en&apiKey=${newsApiKey}`;
+      apiUrl = `https://gnews.io/api/v4/top-headlines?topic=${currentTopic}&lang=en&max=10&apikey=${newsApiKey}`;
     }
 
-    const res = await fetch(url);
+    const res = await fetch(apiUrl);
     const data = await res.json();
 
-    if (data.status !== 'ok') {
-      throw new Error(data.message || 'NewsAPI error');
-    }
-
-    const articles = (data.articles || []).filter(a => a.title && a.title !== '[Removed]');
-    renderNews(articles);
-
+    if (data.errors) throw new Error(Array.isArray(data.errors) ? data.errors.join(', ') : data.errors);
+    renderNews(data.articles || []);
   } catch (err) {
     document.getElementById('mainContent').innerHTML = `<div class="error-banner"><i class="fas fa-exclamation-triangle"></i> ${err.message}</div>`;
   }
 }
 
-// =====================
-// RENDER
-// =====================
 function renderNews(articles) {
   if (!articles.length) {
-    document.getElementById('mainContent').innerHTML = '<div class="empty"><i class="fas fa-newspaper"></i>No articles found.</div>';
+    document.getElementById('mainContent').innerHTML = '<div class="empty"><i class="fas fa-newspaper"></i><div style="margin-top:12px;">No articles found.</div></div>';
     return;
   }
 
   const hero = articles[0];
   const rest = articles.slice(1);
-
   let html = '';
 
-  // Hero card
   html += `
-  <div class="hero-card" onclick="openArticle('${escHtml(hero.url)}')">
+  <div class="hero-card" onclick="window.open('${escHtml(hero.url)}','_blank')">
     <div class="hero-img">
-      ${hero.urlToImage
-        ? `<img src="${escHtml(hero.urlToImage)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">`
-        : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
+      ${hero.image ? `<img src="${escHtml(hero.image)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">` : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
     </div>
     <div class="hero-body">
       <div class="hero-source">${escHtml(hero.source?.name || 'Unknown')}</div>
@@ -411,22 +332,19 @@ function renderNews(articles) {
     </div>
   </div>`;
 
-  // Grid
   html += '<div class="news-grid">';
   rest.forEach(a => {
     html += `
-    <div class="news-card" onclick="openArticle('${escHtml(a.url)}')">
+    <div class="news-card" onclick="window.open('${escHtml(a.url)}','_blank')">
       <div class="news-card-img">
-        ${a.urlToImage
-          ? `<img src="${escHtml(a.urlToImage)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">`
-          : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
+        ${a.image ? `<img src="${escHtml(a.image)}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'no-img\\'><i class=\\'fas fa-newspaper\\'></i></div>'">` : '<div class="no-img"><i class="fas fa-newspaper"></i></div>'}
       </div>
       <div class="news-card-body">
         <div class="news-source">${escHtml(a.source?.name || 'Unknown')}</div>
         <div class="news-title">${escHtml(a.title)}</div>
         <div class="news-meta">
           <span><i class="fas fa-clock"></i> ${timeAgo(a.publishedAt)}</span>
-          <button class="read-btn" onclick="event.stopPropagation();openArticle('${escHtml(a.url)}')">Read →</button>
+          <button class="read-btn" onclick="event.stopPropagation();window.open('${escHtml(a.url)}','_blank')">Read →</button>
         </div>
       </div>
     </div>`;
@@ -436,17 +354,11 @@ function renderNews(articles) {
   document.getElementById('mainContent').innerHTML = html;
 }
 
-function openArticle(url) {
-  window.open(url, '_blank');
-}
-
-// =====================
-// HELPERS
-// =====================
 function timeAgo(dateStr) {
   if (!dateStr) return '';
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
   if (mins < 60) return mins + 'm ago';
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return hrs + 'h ago';
